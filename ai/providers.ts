@@ -1,5 +1,6 @@
 import { createGroq } from "@ai-sdk/groq";
 import { createXai } from "@ai-sdk/xai";
+import { createOpenAI } from "@ai-sdk/openai";
 
 import {
   customProvider,
@@ -42,7 +43,14 @@ const xaiClient = createXai({
   apiKey: getApiKey('XAI_API_KEY'),
 });
 
+const openaiClient = createOpenAI({
+  apiKey: getApiKey('OPENAI_API_KEY'),
+});
+
 const languageModels = {
+  "gpt-4o": openaiClient("gpt-4o"),
+  "gpt-4o-mini": openaiClient("gpt-4o-mini"),
+  "gpt-4-turbo": openaiClient("gpt-4-turbo"),
   "qwen3-32b": wrapLanguageModel(
     {
       model: groqClient('qwen/qwen3-32b'),
@@ -55,6 +63,27 @@ const languageModels = {
 };
 
 export const modelDetails: Record<keyof typeof languageModels, ModelInfo> = {
+  "gpt-4o": {
+    provider: "OpenAI",
+    name: "GPT-4o",
+    description: "OpenAI's most advanced model with strong reasoning and coding capabilities.",
+    apiVersion: "gpt-4o",
+    capabilities: ["Reasoning", "Coding", "Multimodal"]
+  },
+  "gpt-4o-mini": {
+    provider: "OpenAI",
+    name: "GPT-4o Mini",
+    description: "Faster and more affordable version of GPT-4o.",
+    apiVersion: "gpt-4o-mini",
+    capabilities: ["Fast", "Efficient", "Multimodal"]
+  },
+  "gpt-4-turbo": {
+    provider: "OpenAI",
+    name: "GPT-4 Turbo",
+    description: "Enhanced version of GPT-4 with improved performance.",
+    apiVersion: "gpt-4-turbo",
+    capabilities: ["Reasoning", "Coding", "Multimodal"]
+  },
   "kimi-k2": {
     provider: "Groq",
     name: "Kimi K2",
@@ -103,4 +132,4 @@ export type modelID = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels);
 
-export const defaultModel: modelID = "kimi-k2";
+export const defaultModel: modelID = "gpt-4o-mini";
