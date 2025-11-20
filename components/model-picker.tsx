@@ -149,8 +149,7 @@ export const ModelPicker = ({
           >
             <div className="flex items-center gap-1 sm:gap-2">
               {getProviderIcon(modelDetails[validModelId].provider)}
-              {/* 👇 add suppressHydrationWarning */}
-              <span suppressHydrationWarning className="font-medium truncate">
+              <span className="font-medium truncate">
                 {modelDetails[validModelId].name}
               </span>
             </div>
