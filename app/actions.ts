@@ -18,7 +18,7 @@ function getMessageText(message: any): string {
   if (typeof message.content === "object" && message.content?.text) return message.content.text;
   return typeof message === "string" ? message : JSON.stringify(message);
 }
-
+// stronger
 export async function generateTitle(messages: any[]): Promise<string> {
   const userMessage = messages.find((m) => m.role === "user");
   if (!userMessage) return "New Chat";
