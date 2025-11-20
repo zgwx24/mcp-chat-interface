@@ -35,7 +35,7 @@ function getMessageText(message: any): string {
 
   return '';
 }
-
+// stronger
 export async function generateTitle(messages: any[]): Promise<string> {
   try {
     // Find the first user message and use it for title generation
