@@ -5,7 +5,8 @@ import { createOpenAI } from "@ai-sdk/openai";
 import {
   customProvider,
   wrapLanguageModel,
-  extractReasoningMiddleware
+  extractReasoningMiddleware,
+  LanguageModelV1
 } from "ai";
 
 export interface ModelInfo {
@@ -20,49 +21,44 @@ const middleware = extractReasoningMiddleware({
   tagName: 'think',
 });
 
-// Helper to get API keys from environment variables first, then localStorage
 const getApiKey = (key: string): string | undefined => {
-  // Check for environment variables first
   if (process.env[key]) {
     return process.env[key] || undefined;
   }
-
-  // Fall back to localStorage if available
   if (typeof window !== 'undefined') {
     return window.localStorage.getItem(key) || undefined;
   }
-
   return undefined;
 };
 
-const groqClient = createGroq({
-  apiKey: getApiKey('GROQ_API_KEY'),
-});
+const languageModels: Record<string, LanguageModelV1> = {};
 
-const xaiClient = createXai({
-  apiKey: getApiKey('XAI_API_KEY'),
-});
+const openaiKey = getApiKey('OPENAI_API_KEY');
+if (openaiKey) {
+  const openaiClient = createOpenAI({ apiKey: openaiKey });
+  languageModels["gpt-4o"] = openaiClient("gpt-4o");
+  languageModels["gpt-4o-mini"] = openaiClient("gpt-4o-mini");
+  languageModels["gpt-4-turbo"] = openaiClient("gpt-4-turbo");
+}
 
-const openaiClient = createOpenAI({
-  apiKey: getApiKey('OPENAI_API_KEY'),
-});
+const groqKey = getApiKey('GROQ_API_KEY');
+if (groqKey) {
+  const groqClient = createGroq({ apiKey: groqKey });
+  languageModels["qwen3-32b"] = wrapLanguageModel({
+    model: groqClient('qwen/qwen3-32b'),
+    middleware
+  });
+  languageModels["kimi-k2"] = groqClient('moonshotai/kimi-k2-instruct');
+  languageModels["llama4"] = groqClient('meta-llama/llama-4-scout-17b-16e-instruct');
+}
 
-const languageModels = {
-  "gpt-4o": openaiClient("gpt-4o"),
-  "gpt-4o-mini": openaiClient("gpt-4o-mini"),
-  "gpt-4-turbo": openaiClient("gpt-4-turbo"),
-  "qwen3-32b": wrapLanguageModel(
-    {
-      model: groqClient('qwen/qwen3-32b'),
-      middleware
-    }
-  ),
-  "grok-3-mini": xaiClient("grok-3-mini-latest"),
-  "kimi-k2": groqClient('moonshotai/kimi-k2-instruct'),
-  "llama4": groqClient('meta-llama/llama-4-scout-17b-16e-instruct')
-};
+const xaiKey = getApiKey('XAI_API_KEY');
+if (xaiKey) {
+  const xaiClient = createXai({ apiKey: xaiKey });
+  languageModels["grok-3-mini"] = xaiClient("grok-3-mini-latest");
+}
 
-export const modelDetails: Record<keyof typeof languageModels, ModelInfo> = {
+export const modelDetails: Record<string, ModelInfo> = {
   "gpt-4o": {
     provider: "OpenAI",
     name: "GPT-4o",
@@ -114,10 +110,8 @@ export const modelDetails: Record<keyof typeof languageModels, ModelInfo> = {
   }
 };
 
-// Update API keys when localStorage changes (for runtime updates)
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (event) => {
-    // Reload the page if any API key changed to refresh the providers
     if (event.key?.includes('API_KEY')) {
       window.location.reload();
     }
@@ -132,4 +126,4 @@ export type modelID = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels);
 
-export const defaultModel: modelID = "gpt-4o-mini";
+export const defaultModel = MODELS.length > 0 ? MODELS[0] : "gpt-4o-mini";
