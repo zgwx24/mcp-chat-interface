@@ -78,6 +78,6 @@ export default {
         ssl: sslConfig,
       }
     : {
-        url: databaseUrl,
+        url: databaseUrl, //aws Rdsならsslが必要　neonなら不要かも
       },
 } satisfies Config; 
