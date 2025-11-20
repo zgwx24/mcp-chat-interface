@@ -1,6 +1,6 @@
 # MCP Client Chat
 
-An open-source AI chatbot app powered by Model Context Protocol (MCP), built with Next.js and the AI SDK by Vercel.
+  An open-source AI chatbot app powered by Model Context Protocol (MCP), built with Next.js and the AI SDK by Vercel.
 
 ## 特徴
 
@@ -55,6 +55,42 @@ XAI_API_KEY="xai-..."
 **データベース接続URLの形式：**
 - AWS RDSの場合: `postgresql://username:password@host:5432/database?sslmode=require`
 - SSL証明書の検証を無効にする場合: `?sslmode=no-verify`（開発環境のみ推奨）
+
+**AWS RDS SSL証明書の設定（推奨）：**
+
+AWS RDSでSSL証明書の検証を正しく行うには、CA証明書をダウンロードして設定してください。
+
+1. **CA証明書のダウンロード**
+   - AWS公式ドキュメント: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html
+   - または、以下のコマンドでダウンロード：
+   ```bash
+   # ap-northeast-1 (東京リージョン) の場合
+   curl -o rds-ca-2019-root.pem https://truststore.pki.rds.amazonaws.com/ap-northeast-1/ap-northeast-1-bundle.pem
+   ```
+
+2. **証明書ファイルの配置**
+   - ダウンロードした証明書ファイルをプロジェクトの`certs`ディレクトリに配置：
+   ```bash
+   mkdir -p certs
+   mv rds-ca-2019-root.pem certs/
+   ```
+
+3. **環境変数の設定**
+   ```env
+   # 証明書ファイルのパスを指定
+   DB_SSL_CA="./certs/rds-ca-2019-root.pem"
+   
+   # または、証明書の内容を直接指定（Vercelなどのホスティング環境で便利）
+   DB_SSL_CA_CONTENT="-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"
+   ```
+
+4. **接続URLの設定**
+   ```env
+   # sslmode=require を使用（証明書の検証が有効になります）
+   DATABASE_URL="postgresql://username:password@host:5432/database?sslmode=require"
+   ```
+
+これで、`sslmode=no-verify`を使わずに、正しいSSL証明書の検証が行われます。
 
 4. **データベースのセットアップ**
 
