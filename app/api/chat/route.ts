@@ -101,8 +101,13 @@ export async function POST(req: Request) {
   // Track if the response has completed
   let responseCompleted = false;
 
+  const isGpt5Model = selectedModel.includes('gpt-5') || selectedModel.includes('reasoning');
+  // judge if model is reasoning capable for temperature settings
+
   const result = streamText({
     model: model.languageModel(selectedModel),
+    temperature: isGpt5Model ? 1 : 0, // not sending temperature bc gpt5-mini doesn't support 0 temperature
+    //temperature: 1,//or just set to 1 for all models
     system: `You are a helpful assistant with access to a variety of tools.
 
     Today's date is ${new Date().toISOString().split('T')[0]}.

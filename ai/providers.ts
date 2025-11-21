@@ -51,6 +51,7 @@ const languageModels = {
   "gpt-4o": openaiClient("gpt-4o"),
   "gpt-4o-mini": openaiClient("gpt-4o-mini"),
   "gpt-4-turbo": openaiClient("gpt-4-turbo"),
+  "gpt-5-mini": openaiClient("gpt-5-mini"), // 新增 GPT-5 Mini
   "qwen3-32b": wrapLanguageModel(
     {
       model: groqClient('qwen/qwen3-32b'),
@@ -82,6 +83,13 @@ export const modelDetails: Record<keyof typeof languageModels, ModelInfo> = {
     name: "GPT-4 Turbo",
     description: "Enhanced version of GPT-4 with improved performance.",
     apiVersion: "gpt-4-turbo",
+    capabilities: ["Reasoning", "Coding", "Multimodal"]
+  },
+  "gpt-5-mini": {
+    provider: "OpenAI",
+    name: "GPT-5 Mini",
+    description: "Newly added GPT-5 Mini model with improved capabilities.",
+    apiVersion: "gpt-5-mini",
     capabilities: ["Reasoning", "Coding", "Multimodal"]
   },
   "kimi-k2": {
