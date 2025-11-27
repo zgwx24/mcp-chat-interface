@@ -33,32 +33,56 @@ export async function initializeMCPClients(
   // Process each MCP server configuration
   for (const mcpServer of mcpServers) {
     try {
+      // Normalize URL: prepare protocol variants
+      let baseUrl = mcpServer.url.trim();
+      const urlVariants = baseUrl.match(/^https?:\/\//i) 
+        ? [baseUrl]  // Already has protocol, use as-is
+        : [`http://${baseUrl}`, `https://${baseUrl}`];  // Try http first, then https
+
       const headers = mcpServer.headers?.reduce((acc, header) => {
         if (header.key) acc[header.key] = header.value || '';
         return acc;
       }, {} as Record<string, string>);
 
-      const transport = mcpServer.type === 'sse'
-        ? {
-          type: 'sse' as const,
-          url: mcpServer.url,
-          headers,
+      let connected = false;
+      let lastError: any = null;
+
+      // Try each URL variant
+      for (const urlVariant of urlVariants) {
+        try {
+          const transport = mcpServer.type === 'sse'
+            ? {
+              type: 'sse' as const,
+              url: urlVariant,
+              headers,
+            }
+            : new StreamableHTTPClientTransport(new URL(urlVariant), {
+              requestInit: {
+                headers,
+              },
+            });
+
+          const mcpClient = await createMCPClient({ transport });
+          mcpClients.push(mcpClient);
+
+          const mcptools = await mcpClient.tools();
+
+          console.log(`MCP tools from ${urlVariant}:`, Object.keys(mcptools));
+
+          // Add MCP tools to tools object
+          tools = { ...tools, ...mcptools };
+          connected = true;
+          break;  // Success, stop trying other variants
+        } catch (err) {
+          lastError = err;
+          console.warn(`Failed to connect to ${urlVariant}:`, err);
+          // Continue to next variant
         }
-        : new StreamableHTTPClientTransport(new URL(mcpServer.url), {
-          requestInit: {
-            headers,
-          },
-        });
+      }
 
-      const mcpClient = await createMCPClient({ transport });
-      mcpClients.push(mcpClient);
-
-      const mcptools = await mcpClient.tools();
-
-      console.log(`MCP tools from ${mcpServer.url}:`, Object.keys(mcptools));
-
-      // Add MCP tools to tools object
-      tools = { ...tools, ...mcptools };
+      if (!connected && lastError) {
+        throw lastError;
+      }
     } catch (error) {
       console.error("Failed to initialize MCP client:", error);
       // Continue with other servers instead of failing the entire request

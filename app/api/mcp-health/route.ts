@@ -12,7 +12,14 @@ export async function POST(req: NextRequest) {
     }
 
     let client: Client | undefined = undefined;
-    const baseUrl = new URL(url);
+    //const baseUrl = new URL(url);
+    let validUrlString = url;
+    // 检查是否以 http:// 或 https:// 开头，如果没有则默认加上 http://
+    if (!validUrlString.startsWith('http://') && !validUrlString.startsWith('https://')) {
+      validUrlString = `http://${validUrlString}`;
+      }
+
+    const baseUrl = new URL(validUrlString);
 
     // Convert headers array to object
     const headersObj = headers?.reduce((acc: Record<string, string>, header: { key: string; value: string }) => {
